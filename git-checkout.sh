@@ -1,30 +1,42 @@
 #!/usr/bin/env sh
 
-git fetch --quiet
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
+
+showCurrent(){
+    currentBranch=$(git branch --show-current)
+    echo "\n\t${GREEN} *  $currentBranch ${NC}"
+}
 
 checkout(){
     
-    local i=1
-    for branch in "$($1 2>&1)"
-    do
-        if [ -z "$2" ]
-        then
-            echo "[$i] $branch"
-        else
-            echo $2
-        fi
-        ((i=i+1))
-    done
+	local branchString=$($1 2>/dev/null | colrm 1 2  | perl -pe 's/remotes\/origin\/HEAD\s\->\s/remotes\/origin\/HEAD\->/g' )
+	local branchArray=($(echo $branchString | tr "\n" "\n"))
+	local i=1
+	for branch in "${branchArray[@]}"
+	do
+	    if [[ $branch != *"HEAD"* ]] && [ "$branch" != "$currentBranch" ]
+	    then
+            if [ -z $2 ]
+            then
+                
+                echo "\t[$i] $branch"
+
+            elif [ "$i" == "$2" ]
+            then
+                
+                git checkout "$branch"
+                exit 0
+                
+            fi
+	        ((i=i+1))
+	    fi
+	done
+	echo ""
 }
 
-checkout "git branch -a --column"
-exit 0
-
-my_string=$(git branch -a 2>/dev/null | colrm 1 2  )
-my_array=($(echo $my_string | tr "\n" "\n"))
-i=1
-for branch in "${my_array[@]}"
-do
-    echo "[$i] $branch"
-    ((i=i+1))
-done
+git fetch --quiet
+showCurrent
+checkout "git branch -a"
+read -p 'Select branch number: ' branchNumber
+checkout "git branch -a" $branchNumber
