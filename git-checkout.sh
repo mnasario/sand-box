@@ -24,10 +24,10 @@ checkout(){
 
             elif [ "$i" == "$2" ]
             then
-                
+
+                branch=$(echo $branch  | perl -pe 's/remotes\/origin\///g')
                 git checkout "$branch"
                 exit 0
-                
             fi
 	        ((i=i+1))
 	    fi
